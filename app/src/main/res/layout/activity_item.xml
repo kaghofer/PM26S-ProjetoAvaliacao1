@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".Item">
 
-
     <TextView
         android:id="@+id/tvNome2"
         android:layout_width="wrap_content"
@@ -50,6 +49,28 @@
         app:layout_constraintLeft_toLeftOf="@id/tvDescricao2"
         app:layout_constraintTop_toBottomOf="@id/tvDescricao2" />
 
+    <!-- Novo Label do Endereço -->
+    <TextView
+        android:id="@+id/tvEndereco2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Endereço:"
+        android:textColor="#333333"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="@id/tvDescricaoData"
+        app:layout_constraintTop_toBottomOf="@id/tvDescricaoData" />
+
+    <!-- Valor do Endereço -->
+    <TextView
+        android:id="@+id/tvEnderecoData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        app:layout_constraintLeft_toLeftOf="@id/tvEndereco2"
+        app:layout_constraintTop_toBottomOf="@id/tvEndereco2" />
+
     <ImageView
         android:id="@+id/ivFoto2"
         android:layout_width="match_parent"
@@ -61,7 +82,7 @@
         android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDescricaoData" />
+        app:layout_constraintTop_toBottomOf="@+id/tvEnderecoData" />
 
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"

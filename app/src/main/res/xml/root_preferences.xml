@@ -1,0 +1,26 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Configurações do mapa">
+
+
+        <SeekBarPreference
+            app:key="default_map_zoom"
+            app:title="Zoom padrão do mapa"
+            app:defaultValue="15"
+            app:min="0"
+            app:showSeekBarValue="true"
+        />
+
+        <ListPreference
+            app:key="map_type"
+            app:title="Tipo do mapa"
+            app:summary="Selecione o tipo de mapa padrão"
+            app:defaultValue="normal"
+            app:entries="@array/map_type_entries"
+            app:entryValues="@array/map_type_values" />
+
+    </PreferenceCategory>
+
+
+
+</PreferenceScreen>

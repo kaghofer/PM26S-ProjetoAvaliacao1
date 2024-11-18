@@ -25,6 +25,7 @@ class PontoTuristicoAdapter(
         val nomeTextView: TextView = itemView.findViewById(R.id.tvNomeData)
         val descricaoTextView: TextView = itemView.findViewById(R.id.tvDescricaoData)
         val fotoImageView: ImageView = itemView.findViewById(R.id.ivFoto2)
+        val enderecoTextView: TextView = itemView.findViewById(R.id.tvEnderecoData)
         val mapView: MapView = itemView.findViewById(R.id.mapView)
         var googleMap: GoogleMap? = null
     }
@@ -42,6 +43,7 @@ class PontoTuristicoAdapter(
 
         // Configure informações básicas
         holder.nomeTextView.text = ponto.name
+        holder.enderecoTextView.text = ponto.endereco
         holder.descricaoTextView.text = ponto.description
 
         // Configure a foto

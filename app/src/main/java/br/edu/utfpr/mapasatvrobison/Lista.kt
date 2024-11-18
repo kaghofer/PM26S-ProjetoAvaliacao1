@@ -1,5 +1,6 @@
 package br.edu.utfpr.mapasatvrobison
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +11,7 @@ class Lista : AppCompatActivity() {
 
     private lateinit var dbHandler: DBHandler
     private lateinit var btnVoltar: Button
+    private lateinit var btnNovoPonto: Button
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PontoTuristicoAdapter
     private var mapViewBundle: Bundle? = null
@@ -28,11 +30,22 @@ class Lista : AppCompatActivity() {
         setupViews()
         setupRecyclerView()
         loadInitialData()
+        btnNovoPonto = findViewById(R.id.btnNovoPonto)
+        escutarBotoes()
     }
 
     private fun setupViews() {
         dbHandler = DBHandler(this)
         recyclerView = findViewById(R.id.recycleListaPontos)
+
+
+    }
+
+    private fun escutarBotoes() {
+        btnNovoPonto.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+
     }
 
     private fun setupRecyclerView() {
