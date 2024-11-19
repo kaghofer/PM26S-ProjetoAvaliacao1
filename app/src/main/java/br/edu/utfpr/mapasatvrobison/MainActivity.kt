@@ -224,6 +224,10 @@ class MainActivity : AppCompatActivity(), LocationListener {
                 val success = dbHandler.adicionarPontoTuristico(pontoTuristico)
 
                 mostrarMensagem("Ponto turístico salvo!")
+
+                val intent = Intent(this, Lista::class.java)
+                startActivity(intent)
+                finish()
             }
         }
     }
