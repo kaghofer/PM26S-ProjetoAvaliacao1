@@ -1,12 +1,15 @@
 package br.edu.utfpr.mapasatvrobison
 
 import android.app.Activity
-import android.content.ContentValues.TAG
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.preference.PreferenceManager
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -15,47 +18,86 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import android.Manifest
 
 class MapaActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var googleMap: GoogleMap
-
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
-    private var lastKnownLocation: Location? = null //variavel para armazenar a ultima localizacao conhecida
+    private var lastKnownLocation: Location? = null
+    private val defaultLocation = LatLng(-26.2286100, -52.6705600)
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1
 
-    private val defaultLocation = LatLng(-26.2286100, -52.6705600) //define uma loc padrao, caso nao encontre outra... loc de pato branco
-
-    private val DEFAULT_ZOOM = 20 //define um zoom padrao para o mapa
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_mapa)
 
+        checkLocationPermissions()
 
-        // Obtém o fragmento de mapa do layout e configura o callback
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        // Constroi o fusedLocation do cliente para pegar a loc atual
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+    }
 
+    private fun checkLocationPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            if (!hasPermissions()) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.FOREGROUND_SERVICE_LOCATION
+                    ),
+                    LOCATION_PERMISSION_REQUEST_CODE
+                )
+            }
+        }
+    }
+    private fun hasPermissions(): Boolean {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            enableMyLocation()
+        }
+    }
+
+    private fun enableMyLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            googleMap.isMyLocationEnabled = true
+        }
     }
 
     override fun onMapReady(map: GoogleMap) {
-        getDeviceLocation()
         googleMap = map
-        // Configura o clique no mapa para capturar a localização
+        getDeviceLocation()
+
+        //Pega o valor padrao de zoom do sharedPreferences
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val mapType = sharedPreferences.getString("map_type", "normal") //se nao tiver valor, seta o normal
+        val defaultZoom = sharedPreferences.getInt("default_map_zoom", 15)
+
+        //percorre o maptype e seta o tipo de mapa de acordo com a key vindo do sharedPreferences
+        when (mapType) {
+            "normal" -> googleMap.mapType = GoogleMap.MAP_TYPE_NORMAL
+            "satellite" -> googleMap.mapType = GoogleMap.MAP_TYPE_SATELLITE
+            "hybrid" -> googleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
+            "terrain" -> googleMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
+        }
+
         googleMap.setOnMapClickListener { latLng ->
-            googleMap.clear() // Limpa o mapa de marcadores anteriores
+            googleMap.clear()
+            googleMap.addMarker(MarkerOptions().position(latLng).title("Local selecionado"))
+            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, defaultZoom.toFloat()))
 
-            // Adiciona um marcador no local clicado
-            googleMap.addMarker(
-                MarkerOptions().position(latLng).title("Local selecionado")
-            )
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
-
-            // Retorna as coordenadas para a MainActivity
             val resultIntent = Intent().apply {
                 putExtra("LATITUDE", latLng.latitude)
                 putExtra("LONGITUDE", latLng.longitude)
@@ -63,38 +105,26 @@ class MapaActivity : AppCompatActivity(), OnMapReadyCallback {
             setResult(Activity.RESULT_OK, resultIntent)
             finish()
         }
-
     }
 
     private fun getDeviceLocation() {
+
+        //Pega o valor padrao de zoom do sharedPreferences
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        val defaultZoom = sharedPreferences.getInt("default_map_zoom", 15)
         try {
             val locationResult = fusedLocationProviderClient.lastLocation
             locationResult.addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    // Define a posição da câmera do mapa para a localização atual do dispositivo.
+                if (task.isSuccessful && task.result != null) {
                     lastKnownLocation = task.result
-                    if (lastKnownLocation != null) {
-                        val latLng = LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
-
-                        // Move a câmera para a localização atual
-                        googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM.toFloat()))
-
-                        // Adiciona um marcador na localização atual
-                        googleMap?.addMarker(
-                            MarkerOptions().position(latLng).title("Local selecionado")
-                        )
-                    }
+                    val latLng = LatLng(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, defaultZoom.toFloat()))
                 } else {
-                    Log.d(TAG, "Localizacao atual e nula, usando a default")
-                    Log.e(TAG, "Exception: %s", task.exception)
-                    googleMap?.moveCamera(CameraUpdateFactory
-                        .newLatLngZoom(defaultLocation, DEFAULT_ZOOM.toFloat()))
-                    googleMap?.uiSettings?.isMyLocationButtonEnabled = false
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLocation, defaultZoom.toFloat()))
                 }
             }
         } catch (e: SecurityException) {
             Log.e("Exception: %s", e.message, e)
         }
     }
-
 }

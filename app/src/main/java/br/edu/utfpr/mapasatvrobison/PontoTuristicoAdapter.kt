@@ -1,12 +1,15 @@
 package br.edu.utfpr.mapasatvrobison
 
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -16,7 +19,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 
 class PontoTuristicoAdapter(
     private val pontos: List<PontoTuristico>,
-    private val mapViewBundle: Bundle?
+    private val mapViewBundle: Bundle?,
 ) : RecyclerView.Adapter<PontoTuristicoAdapter.ViewHolder>() {
 
     private val mapStateMap = mutableMapOf<Int, Bundle?>()
@@ -25,8 +28,11 @@ class PontoTuristicoAdapter(
         val nomeTextView: TextView = itemView.findViewById(R.id.tvNomeData)
         val descricaoTextView: TextView = itemView.findViewById(R.id.tvDescricaoData)
         val fotoImageView: ImageView = itemView.findViewById(R.id.ivFoto2)
+        val enderecoTextView: TextView = itemView.findViewById(R.id.tvEnderecoData)
         val mapView: MapView = itemView.findViewById(R.id.mapView)
+        val btnDetalhes: Button = itemView.findViewById(R.id.btnDetalhes)
         var googleMap: GoogleMap? = null
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -42,6 +48,7 @@ class PontoTuristicoAdapter(
 
         // Configure informações básicas
         holder.nomeTextView.text = ponto.name
+        holder.enderecoTextView.text = ponto.endereco
         holder.descricaoTextView.text = ponto.description
 
         // Configure a foto
@@ -80,6 +87,13 @@ class PontoTuristicoAdapter(
                 }
             }
         }
+        holder.btnDetalhes.setOnClickListener {
+            val ponto = pontos[position]
+            val intent = Intent(holder.itemView.context, Item::class.java)
+            intent.putExtra("PONTO_TURISTICO_ID", ponto.id)
+            holder.itemView.context.startActivity(intent)
+        }
+
     }
 
     // Métodos do ciclo de vida do MapView

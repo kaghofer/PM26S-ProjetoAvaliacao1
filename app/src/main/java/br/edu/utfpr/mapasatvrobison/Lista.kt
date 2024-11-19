@@ -1,5 +1,6 @@
 package br.edu.utfpr.mapasatvrobison
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
@@ -9,11 +10,11 @@ import androidx.recyclerview.widget.RecyclerView
 class Lista : AppCompatActivity() {
 
     private lateinit var dbHandler: DBHandler
-    private lateinit var btnVoltar: Button
+    private lateinit var btnNovoPonto: Button
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PontoTuristicoAdapter
     private var mapViewBundle: Bundle? = null
-
+private  var isListaVazia = false;
     companion object {
         private const val MAPVIEW_BUNDLE_KEY = "MapViewBundleKey"
     }
@@ -28,14 +29,27 @@ class Lista : AppCompatActivity() {
         setupViews()
         setupRecyclerView()
         loadInitialData()
+        btnNovoPonto = findViewById(R.id.btnNovoPonto)
+
+        escutarBotoes()
     }
 
     private fun setupViews() {
         dbHandler = DBHandler(this)
         recyclerView = findViewById(R.id.recycleListaPontos)
+
+
+    }
+
+    private fun escutarBotoes() {
+        btnNovoPonto.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+
     }
 
     private fun setupRecyclerView() {
+
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = PontoTuristicoAdapter(emptyList(), mapViewBundle)
         recyclerView.adapter = adapter
@@ -43,6 +57,7 @@ class Lista : AppCompatActivity() {
 
     private fun loadInitialData() {
         val pontos = carregarPontosTuristicos()
+        isListaVazia = pontos.isEmpty()
         updateAdapter(pontos)
     }
 

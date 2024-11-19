@@ -10,12 +10,13 @@ import android.util.Log
 class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
-        private const val DATABASE_NAME = "pontos_turisticos"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_NAME = "pontos_turisticos2"
+        private const val DATABASE_VERSION = 3
         private const val TABLE_NAME = "tourist_spots"
         private const val KEY_ID = "id"
         private const val KEY_NAME = "name"
         private const val KEY_DESCRIPTION = "description"
+        private const val KEY_ENDERECO = "endereco"
         private const val KEY_LATITUDE = "latitude"
         private const val KEY_LONGITUDE = "longitude"
         private const val KEY_PHOTO = "photo"
@@ -26,8 +27,29 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
-        onCreate(db)
+        try {
+            Log.i("DBHandler", "Iniciando upgrade do banco de versão $oldVersion para $newVersion")
+
+            when (oldVersion) {
+                1 -> {
+                    // Alterações da versão 1 para 2
+                    db?.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN categoria TEXT")
+                    Log.i("DBHandler", "Adicionada coluna categoria")
+                }
+                // Adicionar futuros casos aqui
+                else -> {
+                    // Fallback: recria a tabela
+                    db?.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
+                    onCreate(db)
+                    Log.i("DBHandler", "Tabela recriada por fallback")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("DBHandler", "Erro durante upgrade: ${e.message}")
+            // Em caso de erro, recria a tabela
+            db?.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
+            onCreate(db)
+        }
     }
 
     private fun createTableQuery(): String {
@@ -36,6 +58,7 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
                 $KEY_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $KEY_NAME TEXT,
                 $KEY_DESCRIPTION TEXT,
+                $KEY_ENDERECO TEXT, 
                 $KEY_LATITUDE REAL,
                 $KEY_LONGITUDE REAL,
                 $KEY_PHOTO BLOB
@@ -58,6 +81,7 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
                 put(KEY_DESCRIPTION, ponto.description)
                 put(KEY_LATITUDE, ponto.latitude)
                 put(KEY_LONGITUDE, ponto.longitude)
+                put(KEY_ENDERECO, ponto.endereco)
                 put(KEY_PHOTO, ponto.photo)  // Foto é armazenada como BLOB
             }
             db.insert(TABLE_NAME, null, values)
@@ -66,6 +90,8 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
 
     // Função para buscar todos os pontos turísticos cadastrados
     fun buscarPontosTuristicos(): List<PontoTuristico> {
+
+
         val pontosTuristicos = mutableListOf<PontoTuristico>()
 
         try {
@@ -102,13 +128,33 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
         return pontoTuristico
     }
 
+     fun getPontoTuristicoById(id: Int): PontoTuristico? {
+        // Obter a instância do banco de dados
 
+
+        // Definindo a consulta para buscar um ponto turístico pelo ID
+        val cursor = writableDatabase.query(
+            TABLE_NAME, // Nome da tabela
+            arrayOf(KEY_ID, KEY_NAME, KEY_DESCRIPTION, KEY_ENDERECO, KEY_LATITUDE, KEY_LONGITUDE, KEY_PHOTO), // Colunas que você quer retornar
+            "$KEY_ID = ?", // Filtro de onde o ID é igual ao parâmetro
+            arrayOf(id.toString()), // Passando o ID como argumento
+            null, null, null // Sem agrupar, sem ordenar
+        )
+
+        // Se a consulta retornar algum resultado, converta o cursor para um PontoTuristico
+        return if (cursor != null && cursor.moveToFirst()) {
+            cursorParaPontoTuristico(cursor) // Converte o cursor para PontoTuristico
+        } else {
+            null // Retorna null se não encontrar nenhum ponto turístico
+        }
+    }
     // Função para converter o cursor do banco de dados em um objeto PontoTuristico
     private fun cursorParaPontoTuristico(cursor: Cursor): PontoTuristico {
         return PontoTuristico(
             id = cursor.getInt(cursor.getColumnIndexOrThrow(KEY_ID)),
             name = cursor.getString(cursor.getColumnIndexOrThrow(KEY_NAME)),
             description = cursor.getString(cursor.getColumnIndexOrThrow(KEY_DESCRIPTION)),
+            endereco = cursor.getString(cursor.getColumnIndexOrThrow(KEY_ENDERECO)),
             latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_LATITUDE)),
             longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(KEY_LONGITUDE)),
             photo = cursor.getBlob(cursor.getColumnIndexOrThrow(KEY_PHOTO))  // Foto armazenada como blob
@@ -128,6 +174,7 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
             val values = ContentValues().apply {
                 put(KEY_NAME, ponto.name)
                 put(KEY_DESCRIPTION, ponto.description)
+                put(KEY_ENDERECO, ponto.endereco)
                 put(KEY_LATITUDE, ponto.latitude)
                 put(KEY_LONGITUDE, ponto.longitude)
                 put(KEY_PHOTO, ponto.photo)
