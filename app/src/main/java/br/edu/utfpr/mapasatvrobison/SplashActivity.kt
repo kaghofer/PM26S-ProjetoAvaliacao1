@@ -13,7 +13,7 @@ class SplashActivity : AppCompatActivity() {
 
         // Redireciona para a MainActivity após 2 segundos
         Handler().postDelayed({
-            val intent = Intent(this, MainActivity::class.java)
+            val intent = Intent(this, Lista::class.java)
             startActivity(intent)
             finish() // Finaliza a SplashActivity para que o usuário não possa voltar a ela
         }, 2000) // 2000 ms = 2 segundos
