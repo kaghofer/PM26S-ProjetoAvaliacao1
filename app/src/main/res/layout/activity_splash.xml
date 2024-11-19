@@ -7,7 +7,7 @@
     android:background="#F3F4F6">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="290dp"
         android:layout_height="wrap_content"
         android:text="Bem-vindo ao Cadastro de Pontos turísticos!"
         android:textAlignment="center"
