@@ -6,6 +6,8 @@ import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 
 class Lista : AppCompatActivity() {
 
@@ -14,7 +16,11 @@ class Lista : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: PontoTuristicoAdapter
     private var mapViewBundle: Bundle? = null
-private  var isListaVazia = false;
+    private var isListaVazia = false
+
+    // Inicializando o launcher para o resultado da atividade de edição
+    private lateinit var editarPontoLauncher: ActivityResultLauncher<Intent>
+
     companion object {
         private const val MAPVIEW_BUNDLE_KEY = "MapViewBundleKey"
     }
@@ -31,25 +37,31 @@ private  var isListaVazia = false;
         loadInitialData()
         btnNovoPonto = findViewById(R.id.btnNovoPonto)
 
+        // Inicializar o launcher para editar pontos turísticos
+        editarPontoLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val pontoAtualizado = result.data?.getSerializableExtra("PONTO_TURISTICO") as? PontoTuristico
+                pontoAtualizado?.let {
+                    updateAdapter(carregarPontosTuristicos())  // Recarregar a lista com os dados atualizados
+                }
+            }
+        }
+
         escutarBotoes()
     }
 
     private fun setupViews() {
         dbHandler = DBHandler(this)
         recyclerView = findViewById(R.id.recycleListaPontos)
-
-
     }
 
     private fun escutarBotoes() {
         btnNovoPonto.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
         }
-
     }
 
     private fun setupRecyclerView() {
-
         recyclerView.layoutManager = LinearLayoutManager(this)
         adapter = PontoTuristicoAdapter(emptyList(), mapViewBundle)
         recyclerView.adapter = adapter
@@ -88,8 +100,7 @@ private  var isListaVazia = false;
 
     private fun forEachVisibleHolder(action: (PontoTuristicoAdapter.ViewHolder) -> Unit) {
         for (i in 0 until recyclerView.childCount) {
-            val holder = recyclerView.getChildViewHolder(recyclerView.getChildAt(i))
-                    as PontoTuristicoAdapter.ViewHolder
+            val holder = recyclerView.getChildViewHolder(recyclerView.getChildAt(i)) as PontoTuristicoAdapter.ViewHolder
             action(holder)
         }
     }

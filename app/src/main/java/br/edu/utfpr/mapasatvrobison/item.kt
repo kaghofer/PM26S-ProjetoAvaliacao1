@@ -13,6 +13,7 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
+
 class Item : AppCompatActivity() {
     private lateinit var tvNome2: TextView
     private lateinit var tvNomeData: TextView
@@ -22,8 +23,10 @@ class Item : AppCompatActivity() {
     private lateinit var tvEnderecoData: TextView
     private lateinit var ivFoto2: ImageView
     private lateinit var mapView: MapView
-    private lateinit var dbHandler: DBHandler  // Seu DBHandler, que gerencia o banco de dados
+    private lateinit var dbHandler: DBHandler // Gerenciador do banco de dados
     private lateinit var btnDeletar: Button
+    private lateinit var btnVoltar: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_item)
@@ -38,29 +41,30 @@ class Item : AppCompatActivity() {
         ivFoto2 = findViewById(R.id.ivFoto2)
         mapView = findViewById(R.id.mapView)
         btnDeletar = findViewById(R.id.btnDeletar)
-        // Recuperar o ID passado pelo Intent
+        btnVoltar = findViewById(R.id.btnVoltar)
+
+        val btnEditar: Button = findViewById(R.id.btnEditar)
+
+        // Recupera o ID do ponto turístico
         val pontoId = intent.getIntExtra("PONTO_TURISTICO_ID", -1)
 
-        // Verificar se o ID é válido
         if (pontoId != -1) {
-            // Buscar o ponto turístico no banco de dados
-            dbHandler = DBHandler(this)  // Supondo que o DBHandler já esteja configurado
+            dbHandler = DBHandler(this)
             val ponto = dbHandler.getPontoTuristicoById(pontoId)
 
-            // Preencher os dados nos campos da tela
             ponto?.let {
                 tvNomeData.text = it.name
                 tvDescricaoData.text = it.description
                 tvEnderecoData.text = it.endereco
 
-                // Setar a foto
-                val bitmap = ponto.photo?.let {
-                    BitmapFactory.decodeByteArray(ponto.photo, 0, it.size)
+                // Exibe a foto, se disponível
+                val bitmap = it.photo?.let {
+                    BitmapFactory.decodeByteArray(it, 0, it.size)
                 }
                 ivFoto2.setImageBitmap(bitmap)
 
-                // Configure o mapa
-                mapView.onCreate(savedInstanceState)  // Inicializa o MapView
+                // Configura o mapa
+                mapView.onCreate(savedInstanceState)
                 mapView.getMapAsync { googleMap ->
                     val location = LatLng(it.latitude, it.longitude)
                     googleMap.apply {
@@ -69,65 +73,44 @@ class Item : AppCompatActivity() {
                         uiSettings.isZoomControlsEnabled = true
                     }
                 }
+
+                // Configura o botão de edição
+                btnEditar.setOnClickListener {
+                    val intent = Intent(this, EditarPontoActivity::class.java)
+                    intent.putExtra("PONTO_TURISTICO_ID", pontoId)
+                    startActivity(intent)
+                }
+
+                btnVoltar.setOnClickListener {
+                    val intent = Intent(this, Lista::class.java)
+                   startActivity(intent)
+                }
+
+                // Configura o botão de exclusão
                 btnDeletar.setOnClickListener {
+                    val alertDialog = AlertDialog.Builder(this)
+                        .setTitle("Excluir Ponto Turístico")
+                        .setMessage("Tem certeza que deseja excluir este ponto turístico?")
+                        .setPositiveButton("Sim") { _, _ ->
+                            val rowsDeleted = dbHandler.deletarPontoTuristico(pontoId)
+                            if (rowsDeleted > 0) {
+                                Toast.makeText(this, "Ponto turístico excluído com sucesso!", Toast.LENGTH_SHORT).show()
+                                val intent = Intent(this, Lista::class.java)
+                                startActivity(intent)
 
-                    val builder = AlertDialog.Builder(this)
-                    builder.setTitle("Confirmação")
-                    builder.setMessage("Tem certeza de que deseja deletar este ponto turístico?")
-                    // Caso o usuário clique em "Sim"
-                    builder.setPositiveButton("Sim") { dialog, which ->
-                        val deleted = dbHandler.deletarPontoTuristico(pontoId)
-                        Toast.makeText(this, "Ponto turístico deletado com sucesso!", Toast.LENGTH_SHORT).show()
-
-                        // Enviar um Intent para a tela de listagem para atualizar a lista
-                        val intent = Intent(this, Lista::class.java)
-                        startActivity(intent)
-                        finish()
-                    }
-
-                    // Caso o usuário clique em "Não"
-                    builder.setNegativeButton("Não") { dialog, which ->
-                        dialog.dismiss()  // Fechar o dialog sem fazer nada
-                    }
-
-                    // Mostrar o dialog
-                    builder.show()
-
-
+                                finish()
+                            } else {
+                                Toast.makeText(this, "Erro ao excluir ponto turístico!", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .setNegativeButton("Cancelar", null)
+                        .create()
+                    alertDialog.show()
                 }
             }
+        } else {
+            Toast.makeText(this, "ID do ponto turístico inválido!", Toast.LENGTH_SHORT).show()
+            finish()
         }
     }
-
-    // Ciclo de vida do MapView
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        mapView.onStart()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mapView.onStop()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mapView.onPause()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mapView.onDestroy()
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapView.onLowMemory()
-    }
-
 }

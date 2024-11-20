@@ -58,7 +58,6 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private fun initViews() {
         etNome = findViewById(R.id.etNome)
         etDescricao = findViewById(R.id.etDescricao)
-       // etEndereco = findViewById(R.id.etEndereco)
         btSalvar = findViewById(R.id.btSalvar)
         btListar = findViewById(R.id.btListar)
         btConfiguracao = findViewById(R.id.btnConfiguracao)
@@ -191,7 +190,7 @@ class MainActivity : AppCompatActivity(), LocationListener {
         val nome = etNome.text.toString()
         val descricao = etDescricao.text.toString()
 
-        if (nome.isEmpty() || descricao.isEmpty()) {
+        if (nome.isEmpty() || descricao.isEmpty() ) {
             mostrarMensagem("Preencha todos os campos e capture uma foto!")
             return
         }

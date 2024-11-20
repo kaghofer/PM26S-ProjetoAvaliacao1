@@ -46,18 +46,18 @@ class PontoTuristicoAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val ponto = pontos[position]
 
-        // Configure informações básicas
+        // Configurar informações básicas
         holder.nomeTextView.text = ponto.name
         holder.enderecoTextView.text = ponto.endereco
         holder.descricaoTextView.text = ponto.description
 
-        // Configure a foto
+        // Configurar a foto
         val bitmap = ponto.photo?.let {
             BitmapFactory.decodeByteArray(ponto.photo, 0, it.size)
         }
         holder.fotoImageView.setImageBitmap(bitmap)
 
-        // Configure o MapView
+        // Configurar o MapView
         with(holder.mapView) {
             tag = position // Identificar o MapView para gerenciamento de estado
             onCreate(mapStateMap[position])
@@ -65,17 +65,17 @@ class PontoTuristicoAdapter(
             getMapAsync { googleMap ->
                 holder.googleMap = googleMap
 
-                // Configure os controles do mapa
+                // Configurar os controles do mapa
                 googleMap.uiSettings.apply {
                     isZoomControlsEnabled = true
                     isScrollGesturesEnabled = true
                     isZoomGesturesEnabled = true
                 }
 
-                // Crie o LatLng para o ponto turístico
+                // Criar o LatLng para o ponto turístico
                 val location = LatLng(ponto.latitude, ponto.longitude)
 
-                // Limpe o mapa e adicione o marcador
+                // Limpar o mapa e adicione o marcador
                 googleMap.apply {
                     clear()
                     addMarker(

@@ -32,13 +32,10 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
 
             when (oldVersion) {
                 1 -> {
-                    // Alterações da versão 1 para 2
                     db?.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN categoria TEXT")
                     Log.i("DBHandler", "Adicionada coluna categoria")
                 }
-                // Adicionar futuros casos aqui
                 else -> {
-                    // Fallback: recria a tabela
                     db?.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
                     onCreate(db)
                     Log.i("DBHandler", "Tabela recriada por fallback")
@@ -108,7 +105,6 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
 
         return pontosTuristicos
     }
-    // Função para buscar ponto turístico pela localização
 
     fun buscarPontoPorLocalizacao(latitude: Double, longitude: Double): PontoTuristico? {
         var pontoTuristico: PontoTuristico? = null
@@ -129,16 +125,13 @@ class DBHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, nul
     }
 
      fun getPontoTuristicoById(id: Int): PontoTuristico? {
-        // Obter a instância do banco de dados
-
-
         // Definindo a consulta para buscar um ponto turístico pelo ID
         val cursor = writableDatabase.query(
             TABLE_NAME, // Nome da tabela
             arrayOf(KEY_ID, KEY_NAME, KEY_DESCRIPTION, KEY_ENDERECO, KEY_LATITUDE, KEY_LONGITUDE, KEY_PHOTO), // Colunas que você quer retornar
-            "$KEY_ID = ?", // Filtro de onde o ID é igual ao parâmetro
-            arrayOf(id.toString()), // Passando o ID como argumento
-            null, null, null // Sem agrupar, sem ordenar
+            "$KEY_ID = ?",
+            arrayOf(id.toString()),
+            null, null, null
         )
 
         // Se a consulta retornar algum resultado, converta o cursor para um PontoTuristico
