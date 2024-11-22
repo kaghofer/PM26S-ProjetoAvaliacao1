@@ -63,11 +63,12 @@ class EditarPontoActivity : AppCompatActivity() {
                 etDescricao.setText(it.description)
                 etEndereco.setText(it.endereco)
 
-                // Exibe a foto, se disponível
-                val bitmap = it.photo?.let {
-                    BitmapFactory.decodeByteArray(it, 0, it.size)
+                // Inicializa a foto existente
+                it.photo?.let { foto ->
+                    val bitmap = BitmapFactory.decodeByteArray(foto, 0, foto.size)
+                    ivFoto.setImageBitmap(bitmap)
+                    fotoEmBytes = foto // Inicializa fotoEmBytes com os dados do banco
                 }
-                ivFoto.setImageBitmap(bitmap)
 
                 // Define as coordenadas para o mapa
                 latitude = it.latitude
@@ -97,6 +98,12 @@ class EditarPontoActivity : AppCompatActivity() {
             val endereco = etEndereco.text.toString()
 
             if (nome.isNotEmpty() && descricao.isNotEmpty() && endereco.isNotEmpty()) {
+                // Garante que a foto não será sobrescrita com null
+                if (fotoEmBytes == null) {
+                    val pontoExistente = dbHandler.getPontoTuristicoById(pontoId)
+                    fotoEmBytes = pontoExistente?.photo
+                }
+
                 // Atualiza as informações no banco de dados
                 val pontoAtualizado = PontoTuristico(pontoId, nome, descricao, endereco, latitude, longitude, fotoEmBytes)
                 val rowsUpdated = dbHandler.atualizarPontoTuristico(pontoAtualizado)
@@ -109,8 +116,6 @@ class EditarPontoActivity : AppCompatActivity() {
                     val intent = Intent(this, Item::class.java)
                     intent.putExtra("PONTO_TURISTICO_ID", pontoId)
                     startActivity(intent)
-
-
                 } else {
                     Toast.makeText(this, "Erro ao atualizar ponto turístico!", Toast.LENGTH_SHORT).show()
                 }
@@ -118,6 +123,7 @@ class EditarPontoActivity : AppCompatActivity() {
                 Toast.makeText(this, "Preencha todos os campos!", Toast.LENGTH_SHORT).show()
             }
         }
+
 
         // Configura o botão de captura de foto
         btnCapturarFoto.setOnClickListener {
